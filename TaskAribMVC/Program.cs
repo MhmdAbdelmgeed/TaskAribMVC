@@ -1,4 +1,7 @@
+using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using TaskAribMVC.DTO.Mapping;
+using TaskAribMVC.Models;
 using TaskAribMVC.Shared.ServiceRegister;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 #region Services 
 
@@ -31,6 +38,7 @@ builder.Services.Scan(scan => scan
     .WithScopedLifetime());
 
 #endregion
+builder.Services.AddAutoMapper(typeof(MappersProfile));
 
 #endregion
 
