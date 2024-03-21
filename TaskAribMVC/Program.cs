@@ -1,13 +1,24 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using TaskAribMVC.Business.BusinessService;
+using TaskAribMVC.Business.IBusinessService;
 using TaskAribMVC.DTO.Mapping;
+using TaskAribMVC.GenericRepository;
 using TaskAribMVC.Models;
 using TaskAribMVC.Shared.ServiceRegister;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+})
+.AddEntityFrameworkStores<ApplicationDbContext>();
+
+
 builder.Services.AddControllersWithViews();
+
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
@@ -39,8 +50,11 @@ builder.Services.Scan(scan => scan
 
 #endregion
 builder.Services.AddAutoMapper(typeof(MappersProfile));
+builder.Services.AddTransient<IUnitOfWork<ApplicationUser>, UnitOfWork<ApplicationDbContext, ApplicationUser>>();
 
 #endregion
+
+
 
 var app = builder.Build();
 
@@ -58,6 +72,11 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthorization();
+
+//app.MapControllerRoute(
+//    name: "login",
+//    pattern: "",
+//    defaults: new { controller = "Login", action = "Index" });
 
 app.MapControllerRoute(
     name: "default",
