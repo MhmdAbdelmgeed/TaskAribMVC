@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using TaskAribMVC.Business.BusinessService;
 using TaskAribMVC.Business.IBusinessService;
 using TaskAribMVC.DTO;
 
@@ -8,10 +10,12 @@ namespace TaskAribMVC.Controllers
     public class EmployeeController : Controller
     {
         private readonly IEmployeeService _employeeService;
+        private readonly IDepartmentService _departmentService;
 
-        public EmployeeController(IEmployeeService employeeService)
+        public EmployeeController(IEmployeeService employeeService, IDepartmentService departmentService)
         {
             _employeeService = employeeService;
+            _departmentService = departmentService;
         }
 
         public IActionResult Index()
@@ -22,6 +26,10 @@ namespace TaskAribMVC.Controllers
 
         public IActionResult Create()
         {
+            var departments = _departmentService.GetAllDepartments();
+
+            ViewBag.Departments = new SelectList(departments ?? new List<DepartmentDTO>(), "Id", "Name");
+
             return View();
         }
 
@@ -30,6 +38,15 @@ namespace TaskAribMVC.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (employeeDTO.DepartmentId.HasValue)
+                {
+                    var department = _departmentService.GetDepartmentById(employeeDTO.DepartmentId.Value);
+                    if (department != null)
+                    {
+                        employeeDTO.DepartmentName = department.Name;
+                    }
+                }
+
                 _employeeService.AddEmployee(employeeDTO);
                 return RedirectToAction("Index");
             }
@@ -43,6 +60,10 @@ namespace TaskAribMVC.Controllers
             {
                 return NotFound();
             }
+
+            var departments = _departmentService.GetAllDepartments();
+            ViewBag.Departments = new SelectList(departments, "Id", "Name", employee.DepartmentId);
+
             return View(employee);
         }
 
@@ -59,6 +80,10 @@ namespace TaskAribMVC.Controllers
                 _employeeService.UpdateEmployee(employeeDTO);
                 return RedirectToAction("Index");
             }
+
+            var departments = _departmentService.GetAllDepartments();
+            ViewBag.Departments = new SelectList(departments, "Id", "Name", employeeDTO.DepartmentId);
+
             return View(employeeDTO);
         }
 
@@ -78,6 +103,8 @@ namespace TaskAribMVC.Controllers
             _employeeService.DeleteEmployee(id);
             return RedirectToAction("Index");
         }
+
+
     }
 
 }
