@@ -1,82 +1,90 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TaskAribMVC.Business.BusinessService;
 using TaskAribMVC.Business.IBusinessService;
 using TaskAribMVC.DTO;
+using TaskAribMVC.Filters;
+using TaskAribMVC.Models;
+using TaskAribMVC.ViewModels;
 
 namespace TaskAribMVC.Controllers
 {
     public class DepartmentController : Controller
     {
-        private readonly IDepartmentService _departmentService;
+        private readonly ApplicationDbContext _context;
 
-        public DepartmentController(IDepartmentService departmentService)
+        public DepartmentController(ApplicationDbContext context)
         {
-            _departmentService = departmentService;
+            _context = context;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
-            var departments = _departmentService.GetAllDepartments();
-            return View(departments);
+            //TODO: use viewModel
+            var Department = _context.Departments.AsNoTracking().ToList();
+            return View(Department);
         }
 
+        [HttpGet]
+        [AjaxOnly]
         public IActionResult Create()
         {
-            return View();
+            return PartialView("_Form");
         }
 
         [HttpPost]
-        public IActionResult Create(DepartmentDTO departmentDTO)
+        [ValidateAntiForgeryToken]
+        public IActionResult Create(DepartmentFormViewModel model)
         {
-            if (ModelState.IsValid)
-            {
-                _departmentService.AddDepartment(departmentDTO);
-                return RedirectToAction("Index");
-            }
-            return View(departmentDTO);
+            if (!ModelState.IsValid)
+                return BadRequest();
+
+            var Department = new Department { Name = model.Name };
+            _context.Add(Department);
+            _context.SaveChanges();
+
+            return PartialView("_DepartmentRow", Department);
         }
+
+        [HttpGet]
+        [AjaxOnly]
         public IActionResult Edit(int id)
         {
-            var department = _departmentService.GetDepartmentById(id);
-            if (department == null)
-            {
+            var Department = _context.Departments.Find(id);
+
+            if (Department is null)
                 return NotFound();
-            }
-            return View(department);
+
+            var viewModel = new DepartmentFormViewModel
+            {
+                Id = id,
+                Name = Department.Name
+            };
+
+            return PartialView("_Form", viewModel);
         }
 
         [HttpPost]
-        public IActionResult Edit(int id, DepartmentDTO department)
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(DepartmentFormViewModel model)
         {
-            if (id != department.Id)
-            {
+            if (!ModelState.IsValid)
                 return BadRequest();
-            }
 
-            if (ModelState.IsValid)
-            {
-                _departmentService.UpdateDepartment(department);
-                return RedirectToAction("Index");
-            }
-            return View(department);
-        }
+            var Department = _context.Departments.Find(model.Id);
 
-        public IActionResult Delete(int id)
-        {
-            var departemnt = _departmentService.GetDepartmentById(id);
-            if (departemnt == null)
-            {
+            if (Department is null)
                 return NotFound();
-            }
-            return View(departemnt);
+
+            Department.Name = model.Name;
+
+            _context.SaveChanges();
+
+            return PartialView("_DepartmentRow", Department);
         }
 
-        [HttpPost]
-        public IActionResult DeleteConfirmed(int id)
-        {
-            _departmentService.DeleteDepartment(id);
-            return RedirectToAction("Index");
-        }
+     
     }
 
 }
