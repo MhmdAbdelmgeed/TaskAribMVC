@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TaskAribMVC.Models
 {
-    public class ApplicationDbContext: IdentityDbContext<ApplicationUser, RoleEntity, string, IdentityUserClaim<string>, UserRoleEntity, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser, RoleEntity, string, IdentityUserClaim<string>, UserRoleEntity, IdentityUserLogin<string>, IdentityRoleClaim<string>, IdentityUserToken<string>>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -40,7 +40,7 @@ namespace TaskAribMVC.Models
             modelBuilder.Entity<IdentityUserToken<string>>()
                 .ToTable("UserToken", "Security");
 
-          
+
             modelBuilder.ApplyConfiguration(new DefaultUsers());
 
         }
